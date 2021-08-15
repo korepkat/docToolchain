@@ -1,0 +1,16 @@
+include::build/README.adoc[]
+
+include::build/roles.adoc[]
+
+== Contributors
+.Contrbutors
+[options="header",cols="2,2"]
+|====
+| Author
+| Mail
+
+include::build/contributors.adoc[]
+
+|====
+
+include::build/changelog.adoc[]
