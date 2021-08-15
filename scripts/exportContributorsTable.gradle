@@ -1,0 +1,21 @@
+//tag::exportContributorsTable[]
+task exportContributorsTable(
+        description: 'exports the contributors from a git subpath',
+        group: 'docToolchain'
+) {
+    doFirst {
+        new File(targetDir).mkdirs()
+    }
+    doLast {
+        logger.info("docToolchain> docDir: "+docDir)
+        logger.info("docToolchain> mainConfigFile: "+mainConfigFile)
+        def config = new ConfigSlurper().parse(new File(docDir, mainConfigFile).text)
+
+        def cmd = ['/bin/bash', '-c', 'git shortlog -n -s -e --all . | sed \'s/^[ \\t0-9]*\\([^<]*\\)<\\([^>]*\\)>/| \\1\\n| \\2\\n/g\'']
+        def changes = cmd.execute(null, new File(docDir, config.changelog.dir)).text
+        def changelog = new File(targetDir, 'contributors.adoc')
+        logger.info "> contributors exported ${changelog.canonicalPath}"
+        changelog.write(changes)
+    }
+}
+//end::exportContributorsTable[]
