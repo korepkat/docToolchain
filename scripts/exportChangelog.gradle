@@ -1,4 +1,79 @@
 //tag::exportChangeLog[]
+
+def parseGitLog(gitLog) {
+
+    def version = 'Current'
+    def categories = ["Bugfix","Feature","Deprecated"]
+    def category = ''
+    def run = false
+    def log = [:]
+
+
+    gitLog.eachLine { line ->
+
+        // skip empty lines
+        if (line.trim() == "" )
+            return
+        // get Version
+        matcher = line =~ /commit .* \(tag: ([^,\)]*).*/
+        matcher.find()
+        if (matcher.size() == 1){
+            version = matcher[0][1]
+            return
+        }
+
+        // get Category
+        matcher = line =~ / *(${categories.join("|")}):/
+        if (matcher.size() == 1){
+            category = matcher[0][1]
+            return
+        }
+
+        // stop changelog on next commit
+        if (line ==~ /commit.*/) {
+            run = false
+            return
+        }
+
+        // start changelog on keyword
+        if (line ==~ / *changelog:/)
+        {
+            run = true
+            category = ''
+            return
+        }
+
+        // get changelog
+        if (run) {
+            if ( !log.containsKey(version) )
+                log[version] = [:]
+            if ( !log[version].containsKey(category))
+                log[version][category] = []
+
+            log[version][category].add(line.trim())
+        }
+    }
+
+
+    def output = "== Changelog\n\n"
+    for ( v in log ) {
+        output += "=== " + v.key + "\n\n"
+
+        if (v.value.containsKey(""))
+            output += v.value[""].join("\n")
+        for ( c in categories){
+            if (!v.value.containsKey(c))
+                continue
+            entry = v.value[c]
+            output += "==== " + c + ":\n\n"
+            output += entry.join("\n")
+        }
+    }
+
+    return output
+}
+
+
 task exportChangeLog(
         description: 'exports the change log from a git subpath',
         group: 'docToolchain'
@@ -13,6 +88,7 @@ task exportChangeLog(
 
         def cmd = "${config.changelog.cmd} ."
         def changes = cmd.execute(null, new File(docDir, config.changelog.dir)).text
+        changes = parseGitLog(changes)
         def changelog = new File(targetDir, 'changelog.adoc')
         logger.info "> changelog exported ${changelog.canonicalPath}"
         changelog.write(changes)
