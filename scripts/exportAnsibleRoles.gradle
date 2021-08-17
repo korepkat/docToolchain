@@ -34,7 +34,7 @@ task exportAnsibleRoles(
         new File(docDir, "../roles").eachFileRecurse(FILES) {
             if (it.absolutePath.endsWith('meta/main.yml')){
                 def dir = it.path.split('/')
-                def roleOutput = "=== " + dir[5].capitalize() +"\n\n"
+                def roleOutput = "=== " + dir[(dir.size()-3)].capitalize() +"\n\n"
 
                 // get meta information
                 def cfg = parser.load( it.text )
