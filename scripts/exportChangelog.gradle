@@ -3,7 +3,8 @@
 def parseGitLog(gitLog) {
 
     def version = 'Current'
-    def categories = ["Bugfix","Feature","Deprecated"]
+    def categories = ["Bugfix","Added", "Changed", "Features","Deprecated",
+    "Removed"]
     def category = ''
     def run = false
     def log = [:]
@@ -54,18 +55,17 @@ def parseGitLog(gitLog) {
         }
     }
 
-
     def output = "== Changelog\n\n"
     for ( v in log ) {
-        output += "=== " + v.key + "\n\n"
+        output += "\n\n=== " + v.key + "\n\n"
 
         if (v.value.containsKey(""))
             output += v.value[""].join("\n")
         for ( c in categories){
             if (!v.value.containsKey(c))
                 continue
-            entry = v.value[c]
-            output += "==== " + c + ":\n\n"
+            def entry = v.value[c]
+            output += "\n\n==== " + c + ":\n\n"
             output += entry.join("\n")
         }
     }
