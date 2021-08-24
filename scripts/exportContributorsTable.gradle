@@ -15,7 +15,7 @@ task exportContributorsTable(
         def changes = cmd.execute(null, new File(docDir, config.changelog.dir)).text
         def changelog = new File(targetDir, 'contributors.adoc')
         logger.info "> contributors exported ${changelog.canonicalPath}"
-        changelog.write(changes)
+        changelog.write(changes, "UTF-8")
     }
 }
 //end::exportContributorsTable[]
