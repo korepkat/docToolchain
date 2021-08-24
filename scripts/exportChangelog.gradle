@@ -16,7 +16,7 @@ def parseGitLog(gitLog) {
         if (line.trim() == "" )
             return
         // get Version
-        def matcher = line =~ /commit .* \(tag: ([^,\)]*).*/
+        def matcher = line =~ /commit .* \(.*tag: ([^,\)]*).*/
         matcher.find()
         if (matcher.size() == 1){
             version = matcher[0][1]
