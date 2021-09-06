@@ -1,0 +1,61 @@
+buildscript {
+    repositories {
+        maven {
+            url mavenRepository
+        }
+    }
+    dependencies {
+        classpath 'org.jsoup:jsoup:1.12.1'
+    }
+}
+
+@Grapes(
+    @Grab(group='org.jsoup', module='jsoup', version='1.6.2')
+)
+import org.jsoup.*
+import org.jsoup.nodes.*
+
+//tag::publishToWebFolder[]
+task publishToWebFolder(
+        description: 'publishes the HTML rendered output to a folder',
+        group: 'docToolchain'
+) {
+    doLast {
+        // retrieve configuration
+        logger.info("docToolchain> docDir: "+docDir)
+        logger.info("docToolchain> mainConfigFile: "+mainConfigFile)
+        def config = new ConfigSlurper().parse(new File(docDir, mainConfigFile).text)
+        
+        def productName = config.toWebFolder.projectName
+        def branchName = config.toWebFolder.branchName
+
+        def destFolder = "${config.toWebFolder.destDir}/${productName}/${branchName}"
+        def sourceHtml = "${targetDir}/${config.toWebFolder.htmlDir}"
+        def sourcePDFFile = "${targetDir}/${config.toWebFolder.pdfFile}"
+
+        copy{
+            from sourceHtml
+            into destFolder
+        }
+
+        copy{
+            from sourcePDFFile
+            into "${destFolder}/${config.toWebFolder.docName}.pdf"
+        }
+
+        // customize html
+        def masterPage = new File("${destFolder}/${config.toWebFolder.docName}.html")
+        Document doc = Jsoup.parse(masterPage, "UTF-8");
+
+        def html = config.toWebFolder.html
+        doc.select("div")[2].before(html)
+        masterPage.text = doc.outerHtml()
+
+        //rename File
+        masterPage.renameTo "${destFolder}/index.html"
+    }
+}
+//end::publishToWebFolder[]
+project.afterEvaluate {
+    project.tasks.publishToWebFolder.dependsOn generateHTML
+}
