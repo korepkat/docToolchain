@@ -73,6 +73,9 @@ apply from: 'scripts/exportMetrics.gradle'
 apply from: 'scripts/exportOpenApi.gradle'
 apply from: 'scripts/exportContributorsTable.gradle'
 apply from: 'scripts/exportAnsibleRoles.gradle'
+apply from: 'scripts/exportDoxygenRoles.gradle'
+apply from: 'scripts/exportSASTReport.gradle'
+apply from: 'scripts/publishToWebFolder.gradle'
 
 // let's set a defaultTask for convenience
 //defaultTasks 'exportChangeLog','exportJiraIssues','asciidoctor'
