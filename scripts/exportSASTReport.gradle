@@ -1,0 +1,85 @@
+//tag::exportSASTReport[]
+
+import groovy.json.JsonSlurper
+
+
+task exportSASTReport(
+        description: 'exports description and documentation from doxygen output',
+        group: 'docToolchain'
+) {
+    doFirst {
+        new File(targetDir).mkdirs()
+    }
+    doLast {
+        // retrieve configuration
+        logger.info("docToolchain> docDir: "+docDir)
+        logger.info("docToolchain> mainConfigFile: "+mainConfigFile)
+        def config = new ConfigSlurper().parse(new File(docDir, mainConfigFile).text)
+
+        // load sast report
+        def jsonFile = new File(docDir, config.sastReport.file)
+        if (!jsonFile.exists()) // skip if not found
+            return ""
+
+        def json = new JsonSlurper().parseText(jsonFile.text)
+        def output = "= SAST - Report \n\n"
+        def probl = [:]
+
+        // iterate through vulnerabilities
+        for ( vuln in json.vulnerabilities )
+        {
+            // Skip excluded entries
+            def exclude = false
+            vuln.identifiers.each{v ->
+                    if (config.sastReport.excludeSAST.containsKey(v.name) && 
+                        (
+                            config.sastReport.excludeSAST[v.name] == null ||
+                            (config.sastReport.excludeSAST[v.name][0] == vuln.location.class &&
+                            config.sastReport.excludeSAST[v.name][1] == vuln.location.method)
+                        )
+                    )
+                    {
+                            exclude = true
+                            return false
+                    }
+            }
+            if(exclude){
+                continue;
+            }
+                
+            // collect references by vulnerabilitie type
+            def prob = vuln.identifiers.size() > 1 ? vuln.identifiers[1].name : vuln.identifiers[0].name
+            if( !probl.containsKey(prob) )
+            {
+                probl[prob] = '== ' + vuln.name + "\n\n"
+                probl[prob] += '[cols="1,3"]\n'
+                probl[prob] += '|====\n'
+                probl[prob] += '| *Name:*\n| ' + vuln.name + '\n\n'
+                probl[prob] += '| *Description:*\n| ' + vuln.description + '\n\n'
+                probl[prob] += '| *Info:*\na| \n'
+                for(ident in vuln.identifiers)
+                {
+                    probl[prob] += "* " +ident.url+"["+ident.name+"^]\n"
+                }
+                probl[prob] += '\n\n'
+                probl[prob] += '| *Severity:* \n| '+ vuln.severity + '\n\n'
+                probl[prob] += '| *Confidence:* \n| '+ vuln.confidence + '\n\n'
+                probl[prob] += '| *Occurrence:* \na|\n\n'
+            }
+            def link = config.sastReport.gitUrl + vuln.location.file+"#L"+vuln.location.start_line
+            probl[prob] += "* " + link + "["+ vuln.location.file + " "+( (vuln.location.end_line - vuln.location.start_line > 0)? "["+vuln.location.start_line+" - "+vuln.location.end_line+"\\]\n" : "["+vuln.location.start_line+"\\]")+"^]\n"
+        }
+
+        // add collection to output string
+        probl.each{k,v ->
+            output += v
+            output += "|====\n\n"
+        }
+
+        // save report file
+        def reportFile = new File(targetDir, 'sast-report.adoc')
+        logger.info "> sast report exported ${reportFile.canonicalPath}"
+        reportFile.write(output)
+    }
+}
+//end::exportSASTReport[]
