@@ -55,9 +55,9 @@ def parseGitLog(gitLog) {
         }
     }
 
-    def output = "== Changelog\n\n"
+    def output = "= Changelog\n\n"
     for ( v in log ) {
-        output += "\n\n=== " + v.key + "\n\n"
+        output += "\n\n== " + v.key + "\n\n"
 
         if (v.value.containsKey(""))
             output += v.value[""].join("\n")
@@ -65,7 +65,7 @@ def parseGitLog(gitLog) {
             if (!v.value.containsKey(c))
                 continue
             def entry = v.value[c]
-            output += "\n\n==== " + c + ":\n\n"
+            output += "\n\n=== " + c + ":\n\n"
             output += entry.join("\n")
         }
     }
@@ -73,6 +73,28 @@ def parseGitLog(gitLog) {
     return output
 }
 
+def parseGitLogTag(gitLog) {
+
+    def version = 'Current'
+    def output = "= Changelog\n\n"
+    def versionSet = false
+
+    gitLog.eachLine { line ->
+        // get Version
+        if (!line.startsWith(' ')){
+            version = line.substring(0, line.indexOf(' '));
+            versionSet = false
+            return
+        }
+        // get changelog
+        if (!versionSet) { 
+            output += "\n\n== "+ version + "\n\n"
+            versionSet = true
+        }
+        output += line.trim() + "\n"
+    }
+    return output
+}
 
 task exportChangeLog(
         description: 'exports the change log from a git subpath',
@@ -86,9 +108,17 @@ task exportChangeLog(
         logger.info("docToolchain> mainConfigFile: "+mainConfigFile)
         def config = new ConfigSlurper().parse(new File(docDir, mainConfigFile).text)
 
-        def cmd = "${config.changelog.cmd} ."
+        def cmd = "${config.changelog.cmd}"
         def changes = cmd.execute(null, new File(docDir, config.changelog.dir)).text
-        changes = parseGitLog(changes)
+        if (config.changelog.parse.size() > 0)
+        switch(config.changelog.parse)
+        {
+            case 'commit': changes = parseGitLog(changes)
+            break
+            case 'tag': changes = parseGitLogTag(changes)
+            break
+        }
+        
         def changelog = new File(targetDir, 'changelog.adoc')
         logger.info "> changelog exported ${changelog.canonicalPath}"
         changelog.write(changes)
