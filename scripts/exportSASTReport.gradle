@@ -77,7 +77,7 @@ task exportSASTReport(
                 probl[prob] += '| *Occurrence:* \na|\n\n'
             }
             def link = config.sastReport.gitUrl + vuln.location.file+"#L"+vuln.location.start_line
-            probl[prob] += "* " + link + "["+ vuln.location.file + " "+( (vuln.location.end_line - vuln.location.start_line > 0)? "["+vuln.location.start_line+" - "+vuln.location.end_line+"\\]\n" : "["+vuln.location.start_line+"\\]")+"^]\n"
+            probl[prob] += "* " + link + "["+ vuln.location.file + " "+( (vuln.location.end_line != NULL && vuln.location.end_line - vuln.location.start_line > 0)? "["+vuln.location.start_line+" - "+vuln.location.end_line+"\\]\n" : "["+vuln.location.start_line+"\\]")+"^]\n"
         }
 
         // add collection to output string
