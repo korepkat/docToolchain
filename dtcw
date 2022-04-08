@@ -15,6 +15,7 @@ VERSION=2.0.3
 DISTRIBUTION_URL=https://github.com/docToolchain/docToolchain/releases/download/v${VERSION}/docToolchain-${VERSION}.zip
 export DTC_PROJECT_BRANCH=$(git branch --show-current)
 DTC_OPTS="$DTC_OPTS -PmainConfigFile=$MAIN_CONFIG_FILE --warning-mode=none --no-daemon"
+docker_containter="rdmueller/doctoolchain:v${VERSION}"
 
 echo "dtcw - docToolchain wrapper V0.22"
 echo "docToolchain V${VERSION}"
@@ -26,6 +27,10 @@ sdkman=false
 homefolder=false
 java=false
 wsl=false
+
+if [ "x$DT_DOCKER" -ne "x" ] ; then
+    docker_containter="$DT_DOCKER"
+fi
 
 if [[ $(grep -i 'microsoft' /proc/version) ]]; then
   echo " "
@@ -189,7 +194,7 @@ else
 	  fi
           docker_cmd=$(which docker)
           echo $docker_cmd
-          command="$docker_cmd run -u $(id -u):$(id -g) --name doctoolchain${version} -e DTC_HEADLESS=1 -e DTC_SITETHEME -p 8042:8042 --rm -it --entrypoint /bin/bash -v ${PWD}:/project rdmueller/doctoolchain:v${VERSION} -c \"doctoolchain . $1 $2 $3 $4 $5 $6 $7 $8 $9 $DTC_OPTS && exit\""
+          command="$docker_cmd run -u $(id -u):$(id -g) --name doctoolchain${version} -e DTC_HEADLESS=1 -e DTC_SITETHEME -p 8042:8042 --rm -it --entrypoint /bin/bash -v ${PWD}:/project ${docker_containter} -c \"doctoolchain . $1 $2 $3 $4 $5 $6 $7 $8 $9 $DTC_OPTS && exit\""
 	  echo "use docker installation"
       else
 
