@@ -226,6 +226,31 @@ sastReport.with {
 //end::SASTReoportConfig[]
 //*****************************************************************************************
 
+//Configuration for exportChangelog
+//tag::publishToWebFolder[]
+publishToWebFolder = [:]
+
+toWebFolder.with {
+
+    projectName = 'Project'
+    branchName =  'git rev-parse --abbrev-ref HEAD'.execute(null,new File('/project')).text.trim()
+    destDir = "/project/doc"
+    htmlDir = 'html5/src/docs'
+    pdfFile = 'pdf/src/docs/manual.pdf'
+    docName = 'manual'
+    html = '''
+            <p>
+                <ul>
+                    <li> <a href="../../index.php" title="back to main page"> Back to Main Page </a></li>
+                    <li> <a href="./manual.pdf" title="Download as PDF"> Download as PDF </a></li>
+                </ul>
+            </p>
+            <hr/>
+        '''
+}
+//end::publishToWebFolder[]
+//*****************************************************************************************
+
 //tag::confluenceConfig[]
 //Configureation for publishToConfluence
 
