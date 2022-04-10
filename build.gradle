@@ -81,6 +81,7 @@ apply from: 'scripts/generateSite.gradle'
 apply from: 'scripts/copyThemes.gradle'
 apply from: 'scripts/fixGlobalReferences.gradle'
 apply from: 'scripts/exportDoxygen.gradle'
+apply from: 'scripts/exportSASTReport.gradle'
 
 task autobuildSite(
     group: 'docToolchain',

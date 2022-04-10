@@ -137,7 +137,6 @@ changelog.with {
 // This Tasks requires doxygen and xsltproc to be installed.
 // The following parameters can be used to change the default behaviour of 'exportDoxygen'.
 
-
 doxygen = [:]
 doxygen.with {
     // Title of the result page
@@ -192,6 +191,39 @@ doxygen.with {
 }
 //end::exportDoxygen[]
 
+//*****************************************************************************************
+//tag::SASTReoportConfig[]
+// Configuration for the export script 'exportSASTReport.gradle'.
+// This Tasks requires an SAST-Report to be parsed.
+// for mor information about SAST-Report generation see: https://docs.gitlab.com/ee/user/application_security/sast/
+
+exportSASTReport = [:]
+
+sastReport.with {
+
+    // Path to output file that is generated
+    outFile = "build/sast.adoc"
+
+    // SAST-Report file to be parsed
+    file = './gl-sast-report.json'
+
+    url = 'git config --get remote.origin.url'.execute(null,new File('/project')).text.trim()
+    branch = 'git rev-parse --abbrev-ref HEAD'.execute(null,new File('/project')).text.trim()
+    
+    // Git Project url to link files
+    gitUrl =  "${url.substring(0,url.length()-4)}/-/blob/${branch}/"
+    
+    // Excluded Locations
+    // Example:
+    /*excludeSAST = ['CWE-117': ['de.qucosa.metsdisseminator.events.JsonEventMappingConfiguration','registerDataFormat'],
+                       'CWE-643': null,
+                       'Find Security Bugs-PATH_TRAVERSAL_IN': null,
+                       'Find Security Bugs-CRLF_INJECTION_LOGS': ['de.qucosa.metsdisseminator.application.kafka.KafkaManualCommitProcessor','process']
+                      ] 
+    */
+    excludeSAST = [:]
+}
+//end::SASTReoportConfig[]
 //*****************************************************************************************
 
 //tag::confluenceConfig[]
