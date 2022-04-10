@@ -251,6 +251,22 @@ toWebFolder.with {
 //end::publishToWebFolder[]
 //*****************************************************************************************
 
+//Configuration for exportChangelog
+//tag::exportAnsible[]
+exportAnsible = [:]
+
+exportAnsible.with {
+
+    // Path to output file that is generated
+    outFile = "build/ansible.adoc"
+
+    // Path to directory where roles are stored
+    rolesDir = "./roles"
+
+}
+//end::exportAnsible[]
+//*****************************************************************************************
+
 //tag::confluenceConfig[]
 //Configureation for publishToConfluence
 

@@ -83,6 +83,7 @@ apply from: 'scripts/fixGlobalReferences.gradle'
 apply from: 'scripts/exportDoxygen.gradle'
 apply from: 'scripts/exportSASTReport.gradle'
 apply from: 'scripts/publishToWebFolder.gradle'
+apply from: 'scripts/exportAnsible.gradle'
 
 task autobuildSite(
     group: 'docToolchain',
