@@ -105,6 +105,53 @@ microsite.with {
 }
 
 //*****************************************************************************************
+//Configuration for exportContributorsTable
+
+exportContributorsTable = [:]
+
+exportContributorsTable.with {
+    // Directory of which the exportChangelog task will export the changelog.
+    // It should be relative to the docDir directory provided in the
+    // gradle.properties file.
+    dir = '.'
+
+    // Path to output file that is generated
+    outFile = 'build/contributors.adoc'
+
+    // Command used to fetch the list of contributors and print as AsciDoc table rows.
+    cmd = ['/bin/bash', '-c', 'git shortlog -n -s -e --all . | sed \'s/^[ \\t0-9]*\\([^<]*\\)<\\([^>]*\\)>/| \\1\\n| \\2\\n/g\'']
+}
+
+//*****************************************************************************************
+
+//Configuration for exportChangelog
+
+exportChangeLogList = [:]
+
+exportChangeLogList.with {
+
+    // Directory of which the exportChangelog task will export the changelog.
+    // It should be relative to the docDir directory provided in the
+    // gradle.properties file.
+    dir = '..'
+
+    // Path to output file that is generated
+    outFile = 'build/changelog.adoc'
+
+    // Command used to fetch the list of changes.
+    // It should be a single command taking a directory as a parameter.
+    // You cannot use multiple commands with pipe between.
+    // This command will be executed in the directory specified by changelogDir
+    // it the environment inherited from the parent process.
+    // This command should produce asciidoc text directly. The exportChangelog
+    // task does not do any post-processing
+    // of the output of that command.
+    //
+    // See also https://git-scm.com/docs/pretty-formats
+    cmd = 'git tag --list -n999 --sort=-v:refname'
+}
+
+//*****************************************************************************************
 
 //Configuration for exportChangelog
 

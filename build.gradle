@@ -84,6 +84,7 @@ apply from: 'scripts/exportDoxygen.gradle'
 apply from: 'scripts/exportSASTReport.gradle'
 apply from: 'scripts/publishToWebFolder.gradle'
 apply from: 'scripts/exportAnsible.gradle'
+apply from: 'scripts/exportContributorsTable.gradle'
 
 task autobuildSite(
     group: 'docToolchain',

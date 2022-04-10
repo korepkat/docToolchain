@@ -1,0 +1,30 @@
+//tag::exportContributorsTable[]
+task exportContributorsTable(
+        description: 'exports the contributors from a git subpath',
+        group: 'docToolchain'
+) {
+    doFirst {
+        new File(targetDir).mkdirs()
+    }
+    doLast {
+        logger.info("docToolchain> docDir: "+docDir)
+        logger.info("docToolchain> mainConfigFile: "+mainConfigFile)
+        def config = new ConfigSlurper().parse(new File(docDir, mainConfigFile).text)
+
+        def cmd = config.exportContributorsTable.cmd
+        def changes = "= Contributors\n\n"
+        changes += ".Contrbutors\n"
+        changes += "[options=\"header\",cols=\"2,2\"]\n"
+        changes += "|====\n"
+        changes += "| Author\n"
+        changes += "| Mail\n\n" 
+        
+        changes += cmd.execute(null, new File(docDir, config.exportContributorsTable.dir)).text
+        changes += "|====\n"
+
+        def changelog = new File(docDir, config.exportContributorsTable.outFile)
+        logger.info "> contributors exported ${changelog.canonicalPath}"
+        changelog.write(changes, "UTF-8")
+    }
+}
+//end::exportContributorsTable[]
