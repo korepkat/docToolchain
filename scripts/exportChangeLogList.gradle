@@ -1,0 +1,48 @@
+//tag::exportChangeLogList[]
+
+def parseGitLogTag(gitLog) {
+
+    def version = 'Current'
+    def output = "= Changelog\n\n"
+    def versionSet = false
+
+    gitLog.eachLine { line ->
+        // get Version
+        if (!line.startsWith(' ')){
+            version = line.substring(0, line.indexOf(' '));
+            versionSet = false
+            return
+        }
+        // get changelog
+        if (!versionSet) { 
+            output += "\n\n== "+ version + "\n\n"
+            versionSet = true
+        }
+        output += line.trim() + "\n"
+    }
+    return output
+}
+
+task exportChangeLogList(
+        description: 'exports the change log from a git subpath',
+        group: 'docToolchain'
+) {
+    doFirst {
+        new File(targetDir).mkdirs()
+    }
+    doLast {
+        logger.info("docToolchain> docDir: "+docDir)
+        logger.info("docToolchain> mainConfigFile: "+mainConfigFile)
+        def config = new ConfigSlurper().parse(new File(docDir, mainConfigFile).text)
+
+        def cmd = "${config.exportChangeLogList.cmd}"
+        def changes = cmd.execute(null, new File(docDir, config.exportChangeLogList.dir)).text
+        
+        changes = parseGitLogTag(changes)
+        
+        def changelog = new File(docDir, config.exportChangeLogList.outFile)
+        logger.info "> changelog exported ${changelog.canonicalPath}"
+        changelog.write(changes)
+    }
+}
+//end::exportChangeLogList[]
