@@ -15,7 +15,8 @@ RUN	echo "add needed tools" && \
     py-pygments \
     libc6-compat \
     ttf-dejavu \
-    doxygen
+    doxygen \
+    libxslt
 RUN gem update --system  --no-rdoc --no-ri
 RUN gem install rdoc --no-document 
 RUN gem install pygments.rb
@@ -37,10 +38,8 @@ RUN     ls . && \
         ./gradlew tasks && \
         ./gradlew dependencies && \
         ./gradlew generatePDF && \
-        chmod -R o=u $GRADLE_USER_HOME && \
-        chmod -R g=u $GRADLE_USER_HOME && \
-        rm -r $GRADLE_USER_HOME/daemon && \
-        chmod -R o=u $HOME
+        chmod -R g=u,o=u $GRADLE_USER_HOME && \
+        rm -r $GRADLE_USER_HOME/daemon
 
 ENV PATH="/home/dtcuser/docToolchain-${DTBranch}/bin:${PATH}"
 

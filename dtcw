@@ -28,7 +28,7 @@ homefolder=false
 java=false
 wsl=false
 
-if [ "x$DT_DOCKER" -ne "x" ] ; then
+if [ "x$DT_DOCKER" != "x" ]; then
     docker_containter="$DT_DOCKER"
 fi
 
