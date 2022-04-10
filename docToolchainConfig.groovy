@@ -133,6 +133,67 @@ changelog.with {
 }
 
 //*****************************************************************************************
+//tag::exportDoxygen[]
+// Configuration for the export script 'exportDoxygen.gradle'.
+// This Tasks requires doxygen and xsltproc to be installed.
+// The following parameters can be used to change the default behaviour of 'exportDoxygen'.
+
+
+doxygen = [:]
+doxygen.with {
+    // Title of the result page
+    doc_title = "API"
+    
+    // Doxygen Command
+    cmd = "doxygen"
+
+    // xsltproc Command
+    xsltCmd = "/usr/bin/xsltproc"
+
+    // Directory used for temporary files
+    tmp_dir = "/tmp"
+
+    // Path to dir where images are stored
+    // a folder named "doxygen" will be generated within this directory
+    img_dir = "build/img"
+
+    // image directory included in to doc file
+    // if it differs from img_dir
+    adoc_img_dir = ""
+
+    // Type of images stored by doxygen [png | svn]
+    img_type = "png"
+
+    // Name of output file that is generated
+    outFile = "doxygen.adoc"
+
+    OUTPUT_DIRECTORY = "build/"
+    FULL_PATH_NAMES = "YES"
+    OPTIMIZE_OUTPUT_FOR_C = "NO"
+    OPTIMIZE_OUTPUT_JAVA = "YES"
+    OPTIMIZE_FOR_FORTRAN = "NO"
+    OPTIMIZE_OUTPUT_VHDL = "NO"
+    OPTIMIZE_OUTPUT_SLICE = "NO"
+    CPP_CLI_SUPPORT = "NO"
+    SIP_SUPPORT = "NO"
+    IDL_PROPERTY_SUPPORT = "YES"
+    TYPEDEF_HIDES_STRUCT = "NO"
+    HIDE_UNDOC_MEMBERS = "YES"
+    HIDE_UNDOC_CLASSES = "YES"
+    CASE_SENSE_NAMES = "NO"
+    INPUT = "src/main"
+    FILE_PATTERNS = "*.java"
+    EXCLUDE = ""
+    EXCLUDE_PATTERNS = ""
+    DIA_PATH = "/usr/bin/dot"
+    DOT_PATH = "/usr/bin/dot" 
+    DOT_IMAGE_FORMAT = "png"
+
+
+}
+//end::exportDoxygen[]
+
+//*****************************************************************************************
 
 //tag::confluenceConfig[]
 //Configureation for publishToConfluence

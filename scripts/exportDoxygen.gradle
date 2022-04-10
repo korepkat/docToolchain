@@ -1,0 +1,264 @@
+//tag::exportDoxygen[]
+
+import groovy.text.*
+
+def parseNamespace(xmlFile, imgDir, imgType, altImgDir)
+{
+    def xml = new XmlSlurper().parse(xmlFile)
+    def output = ":toc:\n"
+    output += ":imagesdir: ${altImgDir}\n\n"
+
+    def namespaces = [:]
+    def classes = [:]
+    def enums = [:]
+    def interfaces = [:]
+    def languages = [:]
+
+    for (component in xml.compounddef)
+    {
+        def type=component.@'kind'.toString()
+        def id=component.@'id'.toString()
+        def language=component.@'language'.toString()
+        languages[language] = 1
+
+        if (component.@'kind' == 'namespace')
+        {
+            if (component.innerclass.size() > 0)
+            {
+                namespaces[id] = component
+            }
+        }else if(component.@'kind' in ['class','enum','interface']){
+            classes[id] = component
+        }
+    }
+
+    namespaces.each { key, val ->
+        // Add Name
+        output += "[[${key}]]\n== ${val.compoundname} ^[Namespace]^\n\n"
+
+        // Add Description
+        if ( val.detaileddescription.toString().length() > 0){
+            output += "${val.detaileddescription}\n\n"
+        }else if ( val.briefdescription.toString().length() > 0){
+            output += "${val.briefdescription}\n\n"
+        }
+
+        for (valClass in val.innerclass){
+            def component = classes[valClass.@'refid'.toString()]
+            output += parseClass(component, imgDir, imgType, val.compoundname.toString().length()+2)
+            classes.remove(valClass.@'refid'.toString())
+        }
+    }
+
+    if (classes.size() > 0) {
+        output += "== No Namespaces\n\n"
+        classes.each { key, component ->
+            output += parseClass(component, imgDir, imgType, 0)
+        }
+    }
+
+    return output
+}
+
+def parseClass (component, imgDir, imgType, stripLength)
+{   
+    def output = "=== ${component.compoundname.toString().substring(stripLength)} ^[${component.@kind.toString().capitalize()}]^\n\n"
+            // Add Description
+            if ( component.detaileddescription.toString().length() > 0){
+                output += "${component.detaileddescription}\n\n"
+            }else if ( component.briefdescription.toString().length() > 0){
+                output += "${component.briefdescription}\n\n"
+            }
+    
+    
+
+    def graph = ""
+    def file = "doxygen/" + component.@'id' + "__inherit__graph." + imgType;
+    if(new File(imgDir, file).exists())
+    {
+        graph += "*Inheritance diagram*\n\n"
+        graph += "image::" + file + "[]\n\n"
+    }
+
+    file = "doxygen/" + component.@'id' + "__coll__graph." + imgType;
+    if(new File(imgDir, file).exists())
+    {
+        graph += "*Collaboration diagram*\n\n"
+        graph += "image::" + file + "[]\n\n"
+    }
+
+    if ( graph != "") {
+        output += "==== Graphs \n\n${graph}"
+    }
+
+    def outClasses = ""
+    output += "==== Components Overview \n\n"
+    for ( section in component.sectiondef)
+    {
+        def type = 0
+        
+        // print Type
+        def kind = section.@'kind'.toString().split('-')
+        output += "*"
+        for (k in kind)
+        {
+            if (k == 'private') {
+                output += "Privat "
+            }else if (k == 'public') {
+                output += "Public "
+            }else if (k == 'attrib') {
+                output += "Attributes"
+                type = 1
+            }else if (k == 'static') {
+                output += "Static "
+            }else if (k == 'package') {
+                output += "Package "
+            }else if (k == 'func') {
+                output += "Functions"
+                type = 2
+            }else if (k == 'protected') {
+                output += "Protected "
+            }else if (k == 'type') {
+                output += "Types"
+                type = 3
+            }else {
+                output += "${k} "
+                println "${k}"
+            }
+        }
+        output += ":*\n\n"
+        
+        if (type > 0 )
+        {
+            if(section.memberdef.size() > 0)
+            {
+                for (attr in section.memberdef)
+                {
+                    def isDesc = type==2?true:false
+                    
+                    if(isDesc)
+                    {
+                        outClasses += "[["+attr.@'id'.toString().trim()+"]]\n"+"===== ${attr.name} ^[${attr.@'kind'.toString().capitalize()}]^ \n\n"
+                        outClasses += "[source,java]\n----\n"
+                        outClasses += "${attr.type.toString()} ${attr.name.toString()} ${attr.argsstring}\n"
+                        outClasses += "----\n\n"
+                        // outClasses += attr.briefdescription+"\n\n"
+
+                        outClasses += attr.detaileddescription.para[0].toString()+"\n\n"
+
+                        def param = attr.detaileddescription.para[1]
+                        for (pl in param.parameterlist) {
+                            if (pl.@'kind' == 'param') {
+                                outClasses += "\n\n_Parameter:_\n\n"
+                                for (paramItem in pl.parameteritem) {
+                                    outClasses += " * *+${paramItem.parameternamelist.parametername.toString()}+* - "
+                                    outClasses += "${paramItem.parameterdescription.para}\n\n"
+                                    
+                                }
+                            }
+
+                            if (pl.@'kind' == 'exception') {
+                                outClasses += "\n\n_Exception:_\n\n"
+                                for (paramItem in pl.parameteritem) {
+                                    outClasses += " * *+${paramItem.parameternamelist.parametername.toString()}+* - "
+                                    outClasses += "${paramItem.parameterdescription.para}\n\n"
+                                    
+                                }
+                            }
+
+                        }
+
+                        if (param.simplesect.para.size() > 0) {
+                                outClasses += "\n\n_Returns:_\n\n"     
+                                outClasses += "  ${param.simplesect.para.toString()}\n\n";
+                            }
+
+                        file = "doxygen/" + attr.@'id' + "_cgraph." + imgType;
+                        def index = file.lastIndexOf('_1') +1
+                        file = file.substring(0,index)  + file.substring(index+1)
+                        if(new File(imgDir, file).exists())
+                        {
+                            outClasses += "*_Call Graph_*\n\n"
+                            outClasses += "image::" + file + "[]\n\n"
+                        }
+                    }
+                    output += "* " + attr.type.toString().trim()
+                    if(isDesc)
+                        output += " xref:#"+attr.@'id'+"[" + attr.name +"] "
+                    else
+                        output += " ${attr.name.toString().trim()} "
+                    output += attr.argsstring.toString() + attr.initializer.toString() + "\n\n"
+                    output += "  "+attr.detaileddescription.para[0].toString()+"\n\n"
+                }
+                output += "\n\n"
+            }
+        }
+        
+    }
+
+    return output + "==== Components\n\n" + outClasses
+}
+
+task exportDoxygen(
+        description: 'exports description and documentation from doxygen output',
+        group: 'docToolchain'
+) {
+    doFirst {
+        new File(targetDir).mkdirs()
+    }
+    doLast {
+        logger.info("docToolchain> docDir: "+docDir)
+        logger.info("docToolchain> mainConfigFile: "+mainConfigFile)
+        def config = new ConfigSlurper().parse(new File(docDir, mainConfigFile).text)
+
+        // Cleanup tmp dir
+        File tmpDir = new File(docDir, config.doxygen.tmp_dir + "/doxygen")
+        if (config.doxygen.tmp_dir[0] == '/')
+            tmpDir = new File(config.doxygen.tmp_dir + "/doxygen")
+        File xmlDir = new File(tmpDir.absolutePath + "/xml")
+        File imgDir = new File(docDir, config.doxygen.img_dir)
+        
+        if (tmpDir.exists()) {
+            tmpDir.deleteDir()
+        }
+        tmpDir.mkdirs()
+        new File(imgDir, "/doxygen").mkdirs()
+
+        // create doxy config
+        config.doxygen.OUTPUT_DIRECTORY = tmpDir.absolutePath
+        def doxyConfTemplate = new File (projectDir,'/resources/doxygen.doxy.template')
+        def doxyConf = new GStringTemplateEngine().createTemplate(doxyConfTemplate).make(config.doxygen)
+        
+        def doxyConfFile = new File(tmpDir, "doxygen.doxy")
+        doxyConfFile.write(doxyConf.toString())
+
+        if ( config.doxygen.adoc_img_dir == "") {
+            config.doxygen.adoc_img_dir = config.doxygen.img_dir
+        }
+        // run doxygen command
+        def cmd = "${config.doxygen.cmd} ${doxyConfFile.absolutePath}"
+        def changes = cmd.execute(null, new File(docDir)).text
+
+        // copy images
+        copy{
+            from (new File(tmpDir, "/html")) {
+                include "*.${config.doxygen.DOT_IMAGE_FORMAT}"
+            }
+            into imgDir
+        }
+
+        // combine xml
+        def xmlOutFile = new File(xmlDir, "all.xml")
+        cmd = "${config.doxygen.xsltCmd} combine.xslt index.xml"
+        def transformationResult = cmd.execute(null, xmlDir).text
+        xmlOutFile.write(transformationResult)
+    
+        def output = "= ${config.doxygen.doc_title}\n"
+        output += parseNamespace(xmlOutFile, imgDir, config.doxygen.DOT_IMAGE_FORMAT,config.doxygen.adoc_img_dir)
+
+        def apiFile = new File(docDir, config.doxygen.outFile)
+        logger.info "> changelog exported ${apiFile.canonicalPath}"
+        apiFile.write(output)
+    }
+}
+//end::exportDoxygen[]
