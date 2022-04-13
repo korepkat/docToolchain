@@ -217,12 +217,13 @@ task exportDoxygen(
             tmpDir = new File(config.doxygen.tmp_dir + "/doxygen")
         File xmlDir = new File(tmpDir.absolutePath + "/xml")
         File imgDir = new File(docDir, config.doxygen.img_dir)
+        File imgDoxDir = new File(imgDir, "/doxygen")
         
         if (tmpDir.exists()) {
             tmpDir.deleteDir()
         }
         tmpDir.mkdirs()
-        new File(imgDir, "/doxygen").mkdirs()
+        imgDoxDir.mkdirs()
 
         // create doxy config
         config.doxygen.OUTPUT_DIRECTORY = tmpDir.absolutePath
@@ -244,7 +245,7 @@ task exportDoxygen(
             from (new File(tmpDir, "/html")) {
                 include "*.${config.doxygen.DOT_IMAGE_FORMAT}"
             }
-            into imgDir
+            into imgDoxDir
         }
 
         // combine xml
